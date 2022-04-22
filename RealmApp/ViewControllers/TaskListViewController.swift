@@ -11,27 +11,25 @@ import RealmSwift
 
 class TaskListViewController: UITableViewController {
 
+    @IBOutlet var segmentedControl: UISegmentedControl!
+    
     var taskLists: Results<TaskList>!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         taskLists = StorageManager.shared.realm.objects(TaskList.self)
-//        createTempData()
+        createTempData()
         let addButton = UIBarButtonItem(
             barButtonSystemItem: .add,
             target: self,
             action: #selector(addButtonPressed)
-            
         )
-        sortTasks()
+        sortTasks(selectedSegmentIndex: segmentedControl.selectedSegmentIndex)
         navigationItem.rightBarButtonItem = addButton
         navigationItem.leftBarButtonItem = editButtonItem
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        tableView.reloadData()
-    }
+
     
     // MARK: - Table view data source
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -43,7 +41,12 @@ class TaskListViewController: UITableViewController {
         var content = cell.defaultContentConfiguration()
         let taskList = taskLists[indexPath.row]
         content.text = taskList.name
-        content.secondaryText = "\(taskList.tasks.count)"
+        let currentTasks = taskList.tasks.filter { $0.isComplete == false }.count
+        if currentTasks == 0 {
+            content.secondaryText = ""
+        } else {
+            content.secondaryText = String(currentTasks)
+        }
         cell.contentConfiguration = content
         return cell
     }
@@ -60,6 +63,7 @@ class TaskListViewController: UITableViewController {
         let editAction = UIContextualAction(style: .normal, title: "Edit") { _, _, isDone in
             self.showAlert(with: taskList) {
                 self.tableView.reloadRows(at: [indexPath], with: .automatic)
+                self.sortTasks(selectedSegmentIndex: self.segmentedControl.selectedSegmentIndex)
             }
             isDone(true)
         }
@@ -75,7 +79,7 @@ class TaskListViewController: UITableViewController {
         
         return UISwipeActionsConfiguration(actions: [doneAction, editAction, deleteAction])
     }
-    
+
     // MARK: - Navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let indexPath = tableView.indexPathForSelectedRow else { return }
@@ -88,15 +92,13 @@ class TaskListViewController: UITableViewController {
         sortTasks(selectedSegmentIndex: sender.selectedSegmentIndex)
     }
     
-    private func sortTasks(selectedSegmentIndex: Int? = nil) {
-        guard let realm = try? Realm() else { return }
-        if selectedSegmentIndex == 0 || selectedSegmentIndex == nil {
-            taskLists = realm.objects(TaskList.self).sorted(byKeyPath: "date", ascending: false)
-            tableView.reloadData()
+    private func sortTasks(selectedSegmentIndex: Int) {
+        if selectedSegmentIndex == 0 {
+            self.taskLists = taskLists.sorted(byKeyPath: "date", ascending: false)
         } else {
-            taskLists = realm.objects(TaskList.self).sorted(byKeyPath: "name", ascending: true)
-            tableView.reloadData()
+            self.taskLists = taskLists.sorted(byKeyPath: "name", ascending: true)
         }
+        tableView.reloadData()
     }
     
     @objc private func addButtonPressed() {

@@ -46,7 +46,13 @@ class StorageManager {
             taskList.name = newValue
         }
     }
-
+    
+    func edit(_ task: Task, newTitle: String) {
+        write {
+            task.name = newTitle
+        }
+    }
+    
     func done(_ taskList: TaskList) {
         write {
             taskList.tasks.setValue(true, forKey: "isComplete")
