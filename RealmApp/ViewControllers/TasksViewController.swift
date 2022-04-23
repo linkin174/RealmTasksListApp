@@ -79,6 +79,7 @@ class TasksViewController: UITableViewController {
         }
         
         let edit = UIContextualAction(style: .normal, title: "Edit") { _, _, isDone in
+            
             self.showAlert(with: task) {
                 tableView.reloadRows(at: [indexPath], with: .automatic)
             }
@@ -114,7 +115,7 @@ extension TasksViewController {
         
         alert.action(with: task) { newValue, note in
             if let task = task, let completion = completion {
-                self.editTask(task: task, newName: newValue)
+                self.editTask(task: task, newName: newValue, newNote: note)
                 completion()
             } else {
                 self.saveTask(withName: newValue, andNote: note)
@@ -130,8 +131,8 @@ extension TasksViewController {
         tableView.insertRows(at: [rowIndex], with: .automatic)
     }
     
-    private func editTask(task: Task, newName: String) {
-        StorageManager.shared.edit(task, newValue: newName)
+    private func editTask(task: Task, newName: String, newNote: String) {
+        StorageManager.shared.edit(task, newName: newName, newNote: newNote)
         let rowIndex = IndexPath(row: currentTasks.index(of: task) ?? 0, section: 0)
         tableView.reloadRows(at: [rowIndex], with: .automatic)
     }

@@ -43,14 +43,15 @@ class StorageManager {
         }
     }
 
-    func edit<T>(_ input: T, newValue: String) {
+    func edit<T>(_ input: T, newName: String, newNote: String = "") {
         if let task = input as? Task {
             write {
-                task.name = newValue
+                task.name = newName
+                task.note = newNote
             }
         } else if let taskList = input as? TaskList {
             write {
-                taskList.name = newValue
+                taskList.name = newName
             }
         }
     }

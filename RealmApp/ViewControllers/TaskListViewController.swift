@@ -124,7 +124,7 @@ extension TaskListViewController {
         
         alert.action(with: taskList) { newValue in
             if let taskList = taskList, let completion = completion {
-                StorageManager.shared.edit(taskList, newValue: newValue)
+                StorageManager.shared.edit(taskList, newName: newValue)
                 completion()
             } else {
                 self.save(taskList: newValue)
