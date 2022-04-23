@@ -10,11 +10,18 @@ import UIKit
 import RealmSwift
 
 class TaskListViewController: UITableViewController {
-
+    
+    //MARK: - Public properties
+    
     var taskLists: Results<TaskList>!
     
+    //MARK: - Private properties
+    
     private var currentSegmentIndex: Int? = nil
-
+    
+    
+    //MARK: - Override methods
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         taskLists = StorageManager.shared.realm.objects(TaskList.self)
@@ -34,12 +41,13 @@ class TaskListViewController: UITableViewController {
         tableView.reloadData()
     }
 
-    // MARK: - Table view data source
+    // MARK: - TableView DataSource
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         taskLists.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: "TaskListCell", for: indexPath)
         
         var content = cell.defaultContentConfiguration()
@@ -56,7 +64,8 @@ class TaskListViewController: UITableViewController {
         return cell
     }
     
-    // MARK: - Table View Data Source
+    // MARK: - TableView Delegate
+    
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let taskList = taskLists[indexPath.row]
         
@@ -94,32 +103,20 @@ class TaskListViewController: UITableViewController {
     }
     
     
-    //MARK: - Sorting
+    //MARK: - IB Actions
     
     @IBAction func sortingList(_ sender: UISegmentedControl) {
         currentSegmentIndex = sender.selectedSegmentIndex
         sortTasks(selectedSegment: currentSegmentIndex)
     }
-    
-    private func sortTasks(selectedSegment: Int?) {
-        self.taskLists = currentSegmentIndex == nil || currentSegmentIndex == 0 ?
-        taskLists.sorted(byKeyPath: "date", ascending: false) :
-        taskLists.sorted(byKeyPath: "name", ascending: true)
-        tableView.reloadData()
-    }
-    
-    @objc private func addButtonPressed() {
-        showAlert()
-    }
-    
-    private func createTempData() {
-        DataManager.shared.createTempData {
-            self.tableView.reloadData()
-        }
-    }
 }
 
+
+//MARK: - Extensions
+
 extension TaskListViewController {
+    
+    //MARK: - Private methods
     
     private func showAlert(with taskList: TaskList? = nil, completion: (() -> Void)? = nil) {
         let title = taskList != nil ? "Edit List" : "New List"
@@ -141,5 +138,22 @@ extension TaskListViewController {
         StorageManager.shared.save(taskList)
         let rowIndex = IndexPath(row: taskLists.index(of: taskList) ?? 0, section: 0)
         tableView.insertRows(at: [rowIndex], with: .automatic)
+    }
+    
+    private func sortTasks(selectedSegment: Int?) {
+        self.taskLists = currentSegmentIndex == nil || currentSegmentIndex == 0 ?
+        taskLists.sorted(byKeyPath: "date", ascending: false) :
+        taskLists.sorted(byKeyPath: "name", ascending: true)
+        tableView.reloadData()
+    }
+    
+    @objc private func addButtonPressed() {
+        showAlert()
+    }
+    
+    private func createTempData() {
+        DataManager.shared.createTempData {
+            self.tableView.reloadData()
+        }
     }
 }

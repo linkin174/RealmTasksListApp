@@ -10,12 +10,20 @@ import RealmSwift
 import UIKit
 
 class TasksViewController: UITableViewController {
+    
+    //MARK: - Public properties
+    
     var taskList: TaskList!
+    
+    
+    //MARK: - Private properties
     
     private var currentTasks: Results<Task>!
 
     private var completedTasks: Results<Task>!
 
+    //MARK: - Override methods
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         title = taskList.name
@@ -54,26 +62,20 @@ class TasksViewController: UITableViewController {
         return cell
     }
     
-    @objc private func addButtonPressed() {
-        showAlert()
-    }
+    //MARK: - TableView Delegate
     
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         
         let task = indexPath.section == 0 ? currentTasks[indexPath.row] : completedTasks[indexPath.row]
         let actionTitle = indexPath.section == 0 ? "Done" : "Restore"
-        let newIndexPath = indexPath.section == 0 ? IndexPath(row: completedTasks.count, section: 1) : IndexPath(row: currentTasks.count, section: 0)
+        let newIndexPath = indexPath.section == 0
+        ? IndexPath(row: completedTasks.count, section: 1)
+        : IndexPath(row: currentTasks.count, section: 0)
         
         let completeRestore = UIContextualAction(style: .normal, title: actionTitle) { _, _, isDone in
-            if indexPath.section == 0 {
-                StorageManager.shared.done(task)
-                tableView.moveRow(at: indexPath, to: newIndexPath)
-                isDone(true)
-            } else {
-                StorageManager.shared.restoreTask(task)
-                tableView.moveRow(at: indexPath, to: newIndexPath)
-                isDone(true)
-            }
+            indexPath.section == 0 ? StorageManager.shared.done(task) : StorageManager.shared.restoreTask(task)
+            tableView.moveRow(at: indexPath, to: newIndexPath)
+            isDone(true)
         }
         
         let edit = UIContextualAction(style: .normal, title: "Edit") { _, _, isDone in
@@ -94,9 +96,17 @@ class TasksViewController: UITableViewController {
         let actionConfig = UISwipeActionsConfiguration(actions: [completeRestore, edit, delete])
         return actionConfig
     }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
 }
+//MARK: - Extensions
 
 extension TasksViewController {
+    
+    //MARK: - Private Methods
+    
     private func showAlert(with task: Task? = nil, completion: (() -> Void)? = nil) {
         let title = task != nil ? "Edit Task" : "New Task"
         
@@ -124,5 +134,10 @@ extension TasksViewController {
         StorageManager.shared.edit(task, newValue: newName)
         let rowIndex = IndexPath(row: currentTasks.index(of: task) ?? 0, section: 0)
         tableView.reloadRows(at: [rowIndex], with: .automatic)
+    }
+    
+    
+    @objc private func addButtonPressed() {
+        showAlert()
     }
 }
