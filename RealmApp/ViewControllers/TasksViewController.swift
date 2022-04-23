@@ -25,16 +25,10 @@ class TasksViewController: UITableViewController {
             action: #selector(addButtonPressed)
         )
         navigationItem.rightBarButtonItems = [addButton, editButtonItem]
-        
-        getTasksLists()
-    }
-
-    
-    private func getTasksLists() {
         currentTasks = taskList.tasks.filter("isComplete = false")
         completedTasks = taskList.tasks.filter("isComplete = true")
     }
-    
+
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -64,56 +58,40 @@ class TasksViewController: UITableViewController {
         showAlert()
     }
     
-    
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let complete = UIContextualAction(style: .normal, title: "Complete") { _, _, _ in
-            let task = self.currentTasks[indexPath.row]
-            let indexPathNew = IndexPath(row: self.completedTasks.count, section: 1)
-            StorageManager.shared.doneTask(task)
-            tableView.moveRow(at: indexPath, to: indexPathNew)
-            
-        }
-        complete.backgroundColor = #colorLiteral(red: 0.3411764801, green: 0.6235294342, blue: 0.1686274558, alpha: 1)
         
-        let restore = UIContextualAction(style: .normal, title: "Restore") { _, _, _ in
-            let task = self.completedTasks[indexPath.row]
-            let indexPathNew = IndexPath(row: self.currentTasks.count, section: 0)
-            StorageManager.shared.restoreTask(task)
-            tableView.moveRow(at: indexPath, to: indexPathNew)
-        }
+        let task = indexPath.section == 0 ? currentTasks[indexPath.row] : completedTasks[indexPath.row]
+        let actionTitle = indexPath.section == 0 ? "Done" : "Restore"
+        let newIndexPath = indexPath.section == 0 ? IndexPath(row: completedTasks.count, section: 1) : IndexPath(row: currentTasks.count, section: 0)
         
-        let edit = UIContextualAction(style: .normal, title: "Edit") { _, _, _ in
-            let task: Task!
+        let completeRestore = UIContextualAction(style: .normal, title: actionTitle) { _, _, isDone in
             if indexPath.section == 0 {
-                task = self.currentTasks[indexPath.row]
+                StorageManager.shared.done(task)
+                tableView.moveRow(at: indexPath, to: newIndexPath)
+                isDone(true)
             } else {
-                task = self.completedTasks[indexPath.row]
+                StorageManager.shared.restoreTask(task)
+                tableView.moveRow(at: indexPath, to: newIndexPath)
+                isDone(true)
             }
+        }
+        
+        let edit = UIContextualAction(style: .normal, title: "Edit") { _, _, isDone in
             self.showAlert(with: task) {
                 tableView.reloadRows(at: [indexPath], with: .automatic)
             }
-            
+            isDone(true)
         }
-        edit.backgroundColor = #colorLiteral(red: 0.9411764741, green: 0.4980392158, blue: 0.3529411852, alpha: 1)
         
         let delete = UIContextualAction(style: .destructive, title: "Delete") { _, _, _ in
-            var task: Task!
-            if indexPath.section == 0 {
-                task = self.currentTasks[indexPath.row]
-            } else {
-                task = self.completedTasks[indexPath.row]
-            }
             StorageManager.shared.delete(task)
             tableView.deleteRows(at: [indexPath], with: .automatic)
         }
         
-        var actions: [UIContextualAction] = []
-        if indexPath.section == 0 {
-            actions = [complete, edit, delete]
-        } else {
-            actions = [restore, edit, delete]
-        }
-        let actionConfig = UISwipeActionsConfiguration(actions: actions)
+        completeRestore.backgroundColor = #colorLiteral(red: 0.3411764801, green: 0.6235294342, blue: 0.1686274558, alpha: 1)
+        edit.backgroundColor = #colorLiteral(red: 0.9411764741, green: 0.4980392158, blue: 0.3529411852, alpha: 1)
+        
+        let actionConfig = UISwipeActionsConfiguration(actions: [completeRestore, edit, delete])
         return actionConfig
     }
 }
@@ -126,14 +104,12 @@ extension TasksViewController {
         
         alert.action(with: task) { newValue, note in
             if let task = task, let completion = completion {
-                // TODO: - edit task
                 self.editTask(task: task, newName: newValue)
                 completion()
             } else {
                 self.saveTask(withName: newValue, andNote: note)
             }
         }
-        
         present(alert, animated: true)
     }
     
@@ -145,7 +121,7 @@ extension TasksViewController {
     }
     
     private func editTask(task: Task, newName: String) {
-        StorageManager.shared.edit(task, newTitle: newName)
+        StorageManager.shared.edit(task, newValue: newName)
         let rowIndex = IndexPath(row: currentTasks.index(of: task) ?? 0, section: 0)
         tableView.reloadRows(at: [rowIndex], with: .automatic)
     }

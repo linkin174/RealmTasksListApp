@@ -12,59 +12,60 @@ import RealmSwift
 class StorageManager {
     static let shared = StorageManager()
     let realm = try! Realm()
-    
+
     private init() {}
-    
+
     // MARK: - Task List
-    func save(_ taskLists: [TaskList]) {
-        write {
-            realm.add(taskLists)
+
+    func save<T>(_ input: T) {
+        if let task = input as? Task {
+            write {
+                realm.add(task)
+            }
+        } else if let taskList = input as? TaskList {
+            write {
+                realm.add(taskList)
+            }
         }
     }
-    
-    func save(_ taskList: TaskList) {
-        write {
-            realm.add(taskList)
+
+    func delete<T>(_ input: T) {
+        if let task = input as? Task {
+            write {
+                realm.delete(task)
+            }
+        } else if let taskList = input as? TaskList {
+            write {
+                realm.delete(taskList.tasks)
+                realm.delete(taskList)
+            }
         }
     }
-    
-    func delete(_ taskList: TaskList) {
-        write {
-            realm.delete(taskList.tasks)
-            realm.delete(taskList)
+
+    func edit<T>(_ input: T, newValue: String) {
+        if let task = input as? Task {
+            write {
+                task.name = newValue
+            }
+        } else if let taskList = input as? TaskList {
+            write {
+                taskList.name = newValue
+            }
         }
     }
-    
-    func delete(_ task: Task) {
-        write {
-            realm.delete(task)
-        }
-    }
-    
-    func edit(_ taskList: TaskList, newValue: String) {
-        write {
-            taskList.name = newValue
-        }
-    }
-    
-    func edit(_ task: Task, newTitle: String) {
-        write {
-            task.name = newTitle
-        }
-    }
-    
-    func done(_ taskList: TaskList) {
-        write {
-            taskList.tasks.setValue(true, forKey: "isComplete")
-        }
-    }
-    
-    func doneTask(_ task: Task) {
-        write {
+
+    func done<T>(_ input: T) {
+        if let task = input as? Task {
+            write {
                 task.setValue(true, forKey: "isComplete")
             }
+        } else if let taskList = input as? TaskList {
+            write {
+                taskList.tasks.setValue(true, forKey: "isComplete")
+            }
+        }
     }
-    
+
     func restoreTask(_ task: Task) {
         write {
             task.setValue(false, forKey: "isComplete")
@@ -72,12 +73,13 @@ class StorageManager {
     }
 
     // MARK: - Tasks
+
     func save(_ task: Task, to taskList: TaskList) {
         write {
             taskList.tasks.append(task)
         }
     }
-    
+
     private func write(completion: () -> Void) {
         do {
             try realm.write {

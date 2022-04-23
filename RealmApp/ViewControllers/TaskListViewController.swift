@@ -11,10 +11,10 @@ import RealmSwift
 
 class TaskListViewController: UITableViewController {
 
-    @IBOutlet var segmentedControl: UISegmentedControl!
-    
     var taskLists: Results<TaskList>!
     
+    private var currentSegmentIndex: Int? = nil
+
     override func viewDidLoad() {
         super.viewDidLoad()
         taskLists = StorageManager.shared.realm.objects(TaskList.self)
@@ -24,13 +24,16 @@ class TaskListViewController: UITableViewController {
             target: self,
             action: #selector(addButtonPressed)
         )
-        sortTasks(selectedSegmentIndex: segmentedControl.selectedSegmentIndex)
+        sortTasks(selectedSegment: currentSegmentIndex)
         navigationItem.rightBarButtonItem = addButton
         navigationItem.leftBarButtonItem = editButtonItem
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        tableView.reloadData()
+    }
 
-    
     // MARK: - Table view data source
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         taskLists.count
@@ -38,14 +41,16 @@ class TaskListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TaskListCell", for: indexPath)
+        
         var content = cell.defaultContentConfiguration()
         let taskList = taskLists[indexPath.row]
         content.text = taskList.name
         let currentTasks = taskList.tasks.filter { $0.isComplete == false }.count
-        if currentTasks == 0 {
-            content.secondaryText = ""
-        } else {
+        if currentTasks != 0 {
             content.secondaryText = String(currentTasks)
+            cell.accessoryView = UIImageView(image: nil)
+        } else {
+            cell.accessoryView = UIImageView(image: UIImage(systemName: "checkmark"))
         }
         cell.contentConfiguration = content
         return cell
@@ -63,7 +68,7 @@ class TaskListViewController: UITableViewController {
         let editAction = UIContextualAction(style: .normal, title: "Edit") { _, _, isDone in
             self.showAlert(with: taskList) {
                 self.tableView.reloadRows(at: [indexPath], with: .automatic)
-                self.sortTasks(selectedSegmentIndex: self.segmentedControl.selectedSegmentIndex)
+                self.sortTasks(selectedSegment: self.currentSegmentIndex)
             }
             isDone(true)
         }
@@ -87,17 +92,19 @@ class TaskListViewController: UITableViewController {
         let taskList = taskLists[indexPath.row]
         tasksVC.taskList = taskList
     }
-
+    
+    
+    //MARK: - Sorting
+    
     @IBAction func sortingList(_ sender: UISegmentedControl) {
-        sortTasks(selectedSegmentIndex: sender.selectedSegmentIndex)
+        currentSegmentIndex = sender.selectedSegmentIndex
+        sortTasks(selectedSegment: currentSegmentIndex)
     }
     
-    private func sortTasks(selectedSegmentIndex: Int) {
-        if selectedSegmentIndex == 0 {
-            self.taskLists = taskLists.sorted(byKeyPath: "date", ascending: false)
-        } else {
-            self.taskLists = taskLists.sorted(byKeyPath: "name", ascending: true)
-        }
+    private func sortTasks(selectedSegment: Int?) {
+        self.taskLists = currentSegmentIndex == nil || currentSegmentIndex == 0 ?
+        taskLists.sorted(byKeyPath: "date", ascending: false) :
+        taskLists.sorted(byKeyPath: "name", ascending: true)
         tableView.reloadData()
     }
     
@@ -126,7 +133,6 @@ extension TaskListViewController {
                 self.save(taskList: newValue)
             }
         }
-        
         present(alert, animated: true)
     }
     
