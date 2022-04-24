@@ -6,23 +6,21 @@
 //  Copyright © 2018 Alexey Efimov. All rights reserved.
 //
 
-import UIKit
 import RealmSwift
+import UIKit
 
 class TasksViewController: UITableViewController {
-    
-    //MARK: - Public properties
+    // MARK: - Public properties
     
     var taskList: TaskList!
     
-    
-    //MARK: - Private properties
+    // MARK: - Private properties
     
     private var currentTasks: Results<Task>!
 
     private var completedTasks: Results<Task>!
 
-    //MARK: - Override methods
+    // MARK: - Override methods
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,15 +60,14 @@ class TasksViewController: UITableViewController {
         return cell
     }
     
-    //MARK: - TableView Delegate
+    // MARK: - TableView Delegate
     
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        
         let task = indexPath.section == 0 ? currentTasks[indexPath.row] : completedTasks[indexPath.row]
         let actionTitle = indexPath.section == 0 ? "Done" : "Restore"
         let newIndexPath = indexPath.section == 0
-        ? IndexPath(row: completedTasks.count, section: 1)
-        : IndexPath(row: currentTasks.count, section: 0)
+            ? IndexPath(row: completedTasks.count, section: 1)
+            : IndexPath(row: currentTasks.count, section: 0)
         
         let completeRestore = UIContextualAction(style: .normal, title: actionTitle) { _, _, isDone in
             indexPath.section == 0 ? StorageManager.shared.done(object: task) : StorageManager.shared.restore(task: task)
@@ -102,11 +99,11 @@ class TasksViewController: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }
-//MARK: - Extensions
+
+// MARK: - Extensions
 
 extension TasksViewController {
-    
-    //MARK: - Private Methods
+    // MARK: - Private Methods
     
     private func showAlert(with task: Task? = nil, completion: (() -> Void)? = nil) {
         let title = task != nil ? "Edit Task" : "New Task"
@@ -136,7 +133,6 @@ extension TasksViewController {
         let rowIndex = IndexPath(row: currentTasks.index(of: task) ?? 0, section: 0)
         tableView.reloadRows(at: [rowIndex], with: .automatic)
     }
-    
     
     @objc private func addButtonPressed() {
         showAlert()
