@@ -17,57 +17,45 @@ class StorageManager {
 
     // MARK: - Task List
 
-    func saveList(_ taskLists: [TaskList]) {
-        write {
-            realm.add(taskLists)
-        }
-    }
-
-    func save(object: Object) {
+    func save(object: Object...) {
         write {
             realm.add(object)
         }
     }
 
     func delete(object: Object) {
-        if let task = object as? Task {
-            write {
-                realm.delete(task)
-            }
-        } else if let taskList = object as? TaskList {
+        if let taskList = object as? TaskList {
             write {
                 realm.delete(taskList.tasks)
                 realm.delete(taskList)
             }
+        } else {
+            write {
+                realm.delete(object)
+            }
         }
     }
 
-    func edit(object: Object, newName: String, newNote: String = "") {
-        if let task = object as? Task {
-            write {
-                task.name = newName
-                task.note = newNote
-            }
-        } else if let taskList = object as? TaskList {
-            write {
-                taskList.name = newName
+    func edit(object: Object, newName: String, newNote: String? = nil) {
+        write {
+            object.setValue(newName, forKey: "name")
+            if let newNote = newNote {
+                object.setValue(newNote, forKey: "note")
             }
         }
     }
 
     func done(object: Object) {
-        if let task = object as? Task {
-            write {
-                task.setValue(true, forKey: "isComplete")
-            }
-        } else if let taskList = object as? TaskList {
+        if let taskList = object as? TaskList {
             write {
                 taskList.tasks.setValue(true, forKey: "isComplete")
             }
+        } else {
+            write {
+                object.setValue(true, forKey: "isComplete")
+            }
         }
     }
-
-    
 
     // MARK: - Tasks
 
@@ -76,7 +64,7 @@ class StorageManager {
             taskList.tasks.append(task)
         }
     }
-    
+
     func restore(task: Task) {
         write {
             task.setValue(false, forKey: "isComplete")
