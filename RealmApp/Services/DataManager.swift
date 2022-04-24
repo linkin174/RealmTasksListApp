@@ -42,7 +42,6 @@ class DataManager {
             
             DispatchQueue.main.async {
                 StorageManager.shared.save(object: shoppingList, moviesList)
-                StorageManager.shared.save(object: moviesList)
                 UserDefaults.standard.set(true, forKey: "done")
                 completion()
             }
