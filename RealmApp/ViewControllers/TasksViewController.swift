@@ -6,8 +6,8 @@
 //  Copyright © 2018 Alexey Efimov. All rights reserved.
 //
 
-import RealmSwift
 import UIKit
+import RealmSwift
 
 class TasksViewController: UITableViewController {
     
@@ -73,7 +73,7 @@ class TasksViewController: UITableViewController {
         : IndexPath(row: currentTasks.count, section: 0)
         
         let completeRestore = UIContextualAction(style: .normal, title: actionTitle) { _, _, isDone in
-            indexPath.section == 0 ? StorageManager.shared.done(task) : StorageManager.shared.restoreTask(task)
+            indexPath.section == 0 ? StorageManager.shared.done(object: task) : StorageManager.shared.restore(task: task)
             tableView.moveRow(at: indexPath, to: newIndexPath)
             isDone(true)
         }
@@ -87,7 +87,7 @@ class TasksViewController: UITableViewController {
         }
         
         let delete = UIContextualAction(style: .destructive, title: "Delete") { _, _, _ in
-            StorageManager.shared.delete(task)
+            StorageManager.shared.delete(object: task)
             tableView.deleteRows(at: [indexPath], with: .automatic)
         }
         
@@ -132,7 +132,7 @@ extension TasksViewController {
     }
     
     private func editTask(task: Task, newName: String, newNote: String) {
-        StorageManager.shared.edit(task, newName: newName, newNote: newNote)
+        StorageManager.shared.edit(object: task, newName: newName, newNote: newNote)
         let rowIndex = IndexPath(row: currentTasks.index(of: task) ?? 0, section: 0)
         tableView.reloadRows(at: [rowIndex], with: .automatic)
     }

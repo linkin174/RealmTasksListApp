@@ -15,10 +15,8 @@ class TaskListViewController: UITableViewController {
     
     var taskLists: Results<TaskList>!
     
-    //MARK: - Private properties
-    
-    private var currentSegmentIndex: Int? = nil
-    
+    //MARK: Private properties
+    private var selectedSegment: Int?
     
     //MARK: - Override methods
     
@@ -31,7 +29,7 @@ class TaskListViewController: UITableViewController {
             target: self,
             action: #selector(addButtonPressed)
         )
-        sortTasks(selectedSegment: currentSegmentIndex)
+        sortTasks()
         navigationItem.rightBarButtonItem = addButton
         navigationItem.leftBarButtonItem = editButtonItem
     }
@@ -70,20 +68,20 @@ class TaskListViewController: UITableViewController {
         let taskList = taskLists[indexPath.row]
         
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { _, _, _ in
-            StorageManager.shared.delete(taskList)
+            StorageManager.shared.delete(object: taskList)
             tableView.deleteRows(at: [indexPath], with: .automatic)
         }
         
         let editAction = UIContextualAction(style: .normal, title: "Edit") { _, _, isDone in
             self.showAlert(with: taskList) {
                 self.tableView.reloadRows(at: [indexPath], with: .automatic)
-                self.sortTasks(selectedSegment: self.currentSegmentIndex)
+                self.sortTasks()
             }
             isDone(true)
         }
         
         let doneAction = UIContextualAction(style: .normal, title: "Done") { _, _, isDone in
-            StorageManager.shared.done(taskList)
+            StorageManager.shared.done(object: taskList)
             tableView.reloadRows(at: [indexPath], with: .automatic)
             isDone(true)
         }
@@ -106,8 +104,8 @@ class TaskListViewController: UITableViewController {
     //MARK: - IB Actions
     
     @IBAction func sortingList(_ sender: UISegmentedControl) {
-        currentSegmentIndex = sender.selectedSegmentIndex
-        sortTasks(selectedSegment: currentSegmentIndex)
+        selectedSegment = sender.selectedSegmentIndex
+        sortTasks()
     }
 }
 
@@ -124,7 +122,7 @@ extension TaskListViewController {
         
         alert.action(with: taskList) { newValue in
             if let taskList = taskList, let completion = completion {
-                StorageManager.shared.edit(taskList, newName: newValue)
+                StorageManager.shared.edit(object: taskList, newName: newValue)
                 completion()
             } else {
                 self.save(taskList: newValue)
@@ -135,13 +133,13 @@ extension TaskListViewController {
     
     private func save(taskList: String) {
         let taskList = TaskList(value: [taskList])
-        StorageManager.shared.save(taskList)
+        StorageManager.shared.save(object: taskList)
         let rowIndex = IndexPath(row: taskLists.index(of: taskList) ?? 0, section: 0)
         tableView.insertRows(at: [rowIndex], with: .automatic)
     }
     
-    private func sortTasks(selectedSegment: Int?) {
-        self.taskLists = currentSegmentIndex == nil || currentSegmentIndex == 0 ?
+    private func sortTasks() {
+        self.taskLists = selectedSegment == 0 || selectedSegment == nil ?
         taskLists.sorted(byKeyPath: "date", ascending: false) :
         taskLists.sorted(byKeyPath: "name", ascending: true)
         tableView.reloadData()

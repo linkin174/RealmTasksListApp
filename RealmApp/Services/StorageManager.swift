@@ -10,7 +10,6 @@ import Foundation
 import RealmSwift
 
 class StorageManager {
-    
     static let shared = StorageManager()
     let realm = try! Realm()
 
@@ -18,24 +17,24 @@ class StorageManager {
 
     // MARK: - Task List
 
-    func save<T>(_ input: T) {
-        if let task = input as? Task {
-            write {
-                realm.add(task)
-            }
-        } else if let taskList = input as? TaskList {
-            write {
-                realm.add(taskList)
-            }
+    func saveList(_ taskLists: [TaskList]) {
+        write {
+            realm.add(taskLists)
         }
     }
 
-    func delete<T>(_ input: T) {
-        if let task = input as? Task {
+    func save(object: Object) {
+        write {
+            realm.add(object)
+        }
+    }
+
+    func delete(object: Object) {
+        if let task = object as? Task {
             write {
                 realm.delete(task)
             }
-        } else if let taskList = input as? TaskList {
+        } else if let taskList = object as? TaskList {
             write {
                 realm.delete(taskList.tasks)
                 realm.delete(taskList)
@@ -43,42 +42,44 @@ class StorageManager {
         }
     }
 
-    func edit<T>(_ input: T, newName: String, newNote: String = "") {
-        if let task = input as? Task {
+    func edit(object: Object, newName: String, newNote: String = "") {
+        if let task = object as? Task {
             write {
                 task.name = newName
                 task.note = newNote
             }
-        } else if let taskList = input as? TaskList {
+        } else if let taskList = object as? TaskList {
             write {
                 taskList.name = newName
             }
         }
     }
 
-    func done<T>(_ input: T) {
-        if let task = input as? Task {
+    func done(object: Object) {
+        if let task = object as? Task {
             write {
                 task.setValue(true, forKey: "isComplete")
             }
-        } else if let taskList = input as? TaskList {
+        } else if let taskList = object as? TaskList {
             write {
                 taskList.tasks.setValue(true, forKey: "isComplete")
             }
         }
     }
 
-    func restoreTask(_ task: Task) {
-        write {
-            task.setValue(false, forKey: "isComplete")
-        }
-    }
+    
 
     // MARK: - Tasks
 
     func save(_ task: Task, to taskList: TaskList) {
         write {
             taskList.tasks.append(task)
+        }
+    }
+    
+    func restore(task: Task) {
+        write {
+            task.setValue(false, forKey: "isComplete")
         }
     }
 

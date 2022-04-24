@@ -13,7 +13,7 @@ class DataManager {
     
     private init() {}
     
-    func createTempData(completion: @escaping() -> Void) {
+    func createTempData(completion: @escaping () -> Void) {
         if !UserDefaults.standard.bool(forKey: "done") {
             let shoppingList = TaskList()
             shoppingList.name = "Shopping List"
@@ -34,13 +34,14 @@ class DataManager {
             milk.note = "2L"
             
             let bread = Task(value: ["Bread", "", Date(), true])
+            let beer = Task(value: ["name": "Beer", "note": "1L"])
             let apples = Task(value: ["name": "Apples", "note": "2Kg"])
             
             shoppingList.tasks.append(milk)
-            shoppingList.tasks.insert(contentsOf: [bread, apples], at: 1)
+            shoppingList.tasks.insert(contentsOf: [bread, apples, beer], at: 1)
             
             DispatchQueue.main.async {
-                StorageManager.shared.save([shoppingList, moviesList])
+                StorageManager.shared.saveList([shoppingList, moviesList])
                 UserDefaults.standard.set(true, forKey: "done")
                 completion()
             }
