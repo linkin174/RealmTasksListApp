@@ -50,9 +50,9 @@ class StorageManager {
             write {
                 taskList.tasks.setValue(true, forKey: "isComplete")
             }
-        } else {
+        } else if let task = object as? Task {
             write {
-                object.setValue(true, forKey: "isComplete")
+                task.isComplete.toggle()
             }
         }
     }
@@ -62,12 +62,6 @@ class StorageManager {
     func save(_ task: Task, to taskList: TaskList) {
         write {
             taskList.tasks.append(task)
-        }
-    }
-
-    func restore(task: Task) {
-        write {
-            task.setValue(false, forKey: "isComplete")
         }
     }
 

@@ -22,14 +22,13 @@ class TaskListViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        taskLists = StorageManager.shared.realm.objects(TaskList.self)
+        taskLists = StorageManager.shared.realm.objects(TaskList.self).sorted(byKeyPath: "name", ascending: false)
         createTempData()
         let addButton = UIBarButtonItem(
             barButtonSystemItem: .add,
             target: self,
             action: #selector(addButtonPressed)
         )
-        sortTasks()
         navigationItem.rightBarButtonItem = addButton
         navigationItem.leftBarButtonItem = editButtonItem
     }
@@ -45,18 +44,16 @@ class TaskListViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
         let cell = tableView.dequeueReusableCell(withIdentifier: "TaskListCell", for: indexPath)
-        
-        var content = cell.defaultContentConfiguration()
         let taskList = taskLists[indexPath.row]
-        content.text = taskList.name
+        var content = cell.defaultContentConfiguration()
         let currentTasks = taskList.tasks.filter { $0.isComplete == false }.count
-        if currentTasks != 0 {
-            content.secondaryText = String(currentTasks)
-            cell.accessoryView = UIImageView(image: nil)
+        content.text = taskList.name
+        if currentTasks != 0 || taskList.tasks.count == 0 {
+            content.secondaryText = String(taskList.tasks.count)
+            cell.accessoryView = nil
         } else {
-            cell.accessoryView = UIImageView(image: UIImage(systemName: "checkmark"))
+            cell.accessoryView = UIImageView(image: .checkmark)
         }
         cell.contentConfiguration = content
         return cell
@@ -65,6 +62,7 @@ class TaskListViewController: UITableViewController {
     // MARK: - TableView Delegate
     
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
         let taskList = taskLists[indexPath.row]
         
         let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { _, _, _ in
@@ -139,9 +137,9 @@ extension TaskListViewController {
     }
     
     private func sortTasks() {
-        self.taskLists = selectedSegment == 0 || selectedSegment == nil ?
-        taskLists.sorted(byKeyPath: "date", ascending: false) :
-        taskLists.sorted(byKeyPath: "name", ascending: true)
+        self.taskLists = selectedSegment == 0 || selectedSegment == nil
+        ? taskLists.sorted(byKeyPath: "date", ascending: false)
+        : taskLists.sorted(byKeyPath: "name", ascending: true)
         tableView.reloadData()
     }
     

@@ -65,23 +65,28 @@ class TasksViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         let task = indexPath.section == 0 ? currentTasks[indexPath.row] : completedTasks[indexPath.row]
         let actionTitle = indexPath.section == 0 ? "Done" : "Restore"
-        let newIndexPath = indexPath.section == 0
-            ? IndexPath(row: completedTasks.count, section: 1)
-            : IndexPath(row: currentTasks.count, section: 0)
         
+        // MARK: - Complete & Restore action
+    
         let completeRestore = UIContextualAction(style: .normal, title: actionTitle) { _, _, isDone in
-            indexPath.section == 0 ? StorageManager.shared.done(object: task) : StorageManager.shared.restore(task: task)
-            tableView.moveRow(at: indexPath, to: newIndexPath)
+            StorageManager.shared.done(object: task)
+            let currentTaskIndex = IndexPath(row: self.currentTasks.index(of: task) ?? 0, section: 0)
+            let completedTaskIndex = IndexPath(row: self.completedTasks.index(of: task) ?? 0, section: 1)
+            let destination = indexPath.section == 0 ? completedTaskIndex : currentTaskIndex
+            tableView.moveRow(at: indexPath, to: destination)
             isDone(true)
         }
         
+        // MARK: - Edit action
+        
         let edit = UIContextualAction(style: .normal, title: "Edit") { _, _, isDone in
-            
             self.showAlert(with: task) {
                 tableView.reloadRows(at: [indexPath], with: .automatic)
             }
             isDone(true)
         }
+        
+        // MARK: - Delete action
         
         let delete = UIContextualAction(style: .destructive, title: "Delete") { _, _, _ in
             StorageManager.shared.delete(object: task)
