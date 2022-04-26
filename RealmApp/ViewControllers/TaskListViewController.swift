@@ -29,6 +29,7 @@ class TaskListViewController: UITableViewController {
             target: self,
             action: #selector(addButtonPressed)
         )
+        sortTasks()
         navigationItem.rightBarButtonItem = addButton
         navigationItem.leftBarButtonItem = editButtonItem
     }
